@@ -5,4 +5,7 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = {
+  output: "export", // Change from 'standalone' to 'export'
+  distDir: "out", // Specify output directory
+};
