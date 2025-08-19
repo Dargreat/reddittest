@@ -2,15 +2,12 @@
 const nextConfig = {};
 
 module.exports = {
-  async headers() {
+  async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET' }
-        ]
+        source: '/api/search',
+        destination: '/api/search' // Ensures proper routing
       }
-    ];
+    ]
   }
 };
