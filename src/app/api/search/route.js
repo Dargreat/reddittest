@@ -15,28 +15,34 @@ export async function GET(request) {
   const timeoutId = setTimeout(() => controller.abort(), 8000);
   
   try {
-    const redditUrl = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}`;
-    
-    const response = await fetch(redditUrl, {
+    // Using CORS proxy to bypass Reddit restrictions
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(
+      `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}`
+    )}`;
+
+    const response = await fetch(proxyUrl, {
       signal: controller.signal,
       headers: { 
-        'User-Agent': 'RedditSearchApp/1.0 (by /u/Bubbly-Afternoon-298)',
+        'User-Agent': 'RedditSearchApp/1.0 by Bubbly-Afternoon-298',
         'Accept': 'application/json'
       }
     });
     
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Reddit API error ${response.status}: ${errorText}`);
+      throw new Error(`Proxy API error ${response.status}: ${errorText}`);
     }
     
     const data = await response.json();
     
-    if (!data.data || !Array.isArray(data.data.children)) {
+    // Parse the JSON content from the proxy response
+    const redditData = JSON.parse(data.contents);
+    
+    if (!redditData.data || !Array.isArray(redditData.data.children)) {
       throw new Error('Invalid Reddit response structure');
     }
 
-    const subreddits = data.data.children.map(sub => ({
+    const subreddits = redditData.data.children.map(sub => ({
       id: sub.data.id,
       name: sub.data.display_name,
       title: sub.data.title,
@@ -72,6 +78,3 @@ export async function GET(request) {
     clearTimeout(timeoutId);
   }
 }
-
-
-
