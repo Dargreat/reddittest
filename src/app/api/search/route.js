@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -14,16 +14,24 @@ export async function GET(request) {
   try {
     const redditUrl = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}`;
     const response = await fetch(redditUrl, {
-      headers: { 'User-Agent': 'Next.js Reddit Search/1.0' }
+      headers: { 
+        'User-Agent': 'RedditSearchApp/1.0 (by /u/YourRedditUsername)' 
+      }
     });
     
+    // Check for non-200 responses
     if (!response.ok) {
-      throw new Error(`Reddit API responded with status ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Reddit API error ${response.status}: ${errorText}`);
     }
     
     const data = await response.json();
     
-    // Format response
+    // Validate Reddit response structure
+    if (!data.data || !Array.isArray(data.data.children)) {
+      throw new Error('Invalid response structure from Reddit API');
+    }
+
     const subreddits = data.data.children.map(sub => ({
       id: sub.data.id,
       name: sub.data.display_name,
@@ -31,15 +39,18 @@ export async function GET(request) {
       url: sub.data.url,
       subscribers: sub.data.subscribers,
       description: sub.data.public_description,
-      icon: sub.data.icon_img || sub.data.community_icon
+      icon: sub.data.icon_img || sub.data.community_icon || null
     }));
 
     return new Response(JSON.stringify(subreddits), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*' 
+      }
     });
   } catch (error) {
-    console.error('Reddit API error:', error);
+    console.error('API Error:', error);
     return new Response(JSON.stringify({ 
       error: 'Failed to fetch subreddits',
       details: error.message 
@@ -49,4 +60,3 @@ export async function GET(request) {
     });
   }
 }
-
