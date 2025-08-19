@@ -72,8 +72,6 @@ export async function GET(request) {
     clearTimeout(timeoutId);
   }
 }
-  }
-}
 
 
 
