@@ -2,12 +2,18 @@
 const nextConfig = {};
 
 module.exports = {
-  async rewrites() {
+  experimental: {
+    serverActions: false, // Disable since not using
+  },
+  async headers() {
     return [
       {
-        source: '/api/search',
-        destination: '/api/search' // Ensures proper routing
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, OPTIONS' }
+        ]
       }
-    ]
+    ];
   }
 };
