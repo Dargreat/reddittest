@@ -1,98 +1,76 @@
-'use client';
+"use client";
+import { useState } from "react";
 
-import { useState } from 'react';
-
-export default function Home() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [results, setResults] = useState([]);
+export default function HomePage() {
+  const [query, setQuery] = useState("");
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const searchSubreddits = async () => {
-    if (!searchTerm.trim()) return;
-    
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!query) return;
+
     setLoading(true);
-    setError('');
-    setResults([]);
-    
+    setError("");
+    setPosts([]);
+
     try {
-      const response = await fetch(`/api/search?query=${searchTerm}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setResults(data);
+      const res = await fetch(`/api/search?query=${query}`);
+      const data = await res.json();
+
+      if (data.error) {
+        setError(data.error);
       } else {
-        setError(data.error || 'Search failed');
+        setPosts(data.data.children || []);
       }
     } catch (err) {
-      setError('Network error. Please try again.');
-      console.error('Search error:', err);
+      setError("Failed to fetch posts");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8">Reddit Subreddit Search</h1>
-        
-        <div className="flex mb-8">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search subreddits..."
-            className="flex-1 p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onKeyDown={(e) => e.key === 'Enter' && searchSubreddits()}
-          />
-          <button
-            onClick={searchSubreddits}
-            disabled={loading}
-            className="bg-blue-500 text-white px-6 py-3 rounded-r-lg hover:bg-blue-600 disabled:bg-blue-300"
-          >
-            {loading ? 'Searching...' : 'Search'}
-          </button>
-        </div>
+    <main className="p-8 max-w-2xl mx-auto">
+      <h1 className="text-3xl font-bold mb-4">🔎 Reddit Subreddit Search</h1>
 
-        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+      <form onSubmit={handleSearch} className="flex gap-2 mb-6">
+        <input
+          type="text"
+          placeholder="Enter subreddit name (e.g. javascript)"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="flex-1 border p-2 rounded"
+        />
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Search
+        </button>
+      </form>
 
-        <div className="space-y-4">
-          {results.length > 0 ? (
-            results.map((subreddit) => (
-              <div key={subreddit.id} className="bg-white p-4 rounded-lg shadow">
-                <div className="flex items-center mb-2">
-                  {subreddit.icon && (
-                    <img 
-                      src={subreddit.icon} 
-                      alt={subreddit.name} 
-                      className="w-10 h-10 rounded-full mr-3"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
-                  )}
-                  <div>
-                    <h2 className="font-bold">
-                      <a 
-                        href={`https://reddit.com${subreddit.url}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
-                      >
-                        r/{subreddit.name}
-                      </a>
-                    </h2>
-                    <p className="text-gray-600">{subreddit.subscribers.toLocaleString()} subscribers</p>
-                  </div>
-                </div>
-                <p className="font-semibold">{subreddit.title}</p>
-                <p className="text-gray-700">{subreddit.description}</p>
-              </div>
-            ))
-          ) : (
-            !loading && <p className="text-center text-gray-500">No results found. Try searching for something like "programming" or "gaming"</p>
-          )}
-        </div>
-      </div>
-    </div>
+      {loading && <p>Loading posts...</p>}
+      {error && <p className="text-red-600">{error}</p>}
+
+      <ul className="space-y-4">
+        {posts.map((post) => (
+          <li key={post.data.id} className="border p-4 rounded shadow">
+            <a
+              href={`https://reddit.com${post.data.permalink}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-lg hover:underline"
+            >
+              {post.data.title}
+            </a>
+            <p className="text-sm text-gray-600">
+              👍 {post.data.ups} | 💬 {post.data.num_comments}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </main>
   );
 }
