@@ -20,7 +20,7 @@ export async function GET(request) {
     const response = await fetch(redditUrl, {
       signal: controller.signal,
       headers: { 
-        'User-Agent': 'RedditSearchApp/1.0 (by /u/Dargreat)',
+        'User-Agent': 'RedditSearchApp/1.0 (by /u/Bubbly-Afternoon-298)',
         'Accept': 'application/json'
       }
     });
@@ -58,8 +58,7 @@ export async function GET(request) {
     console.error('API Error Details:', {
       error: error.message,
       query,
-      timestamp: new Date().toISOString(),
-      stack: error.stack
+      timestamp: new Date().toISOString()
     });
     
     return new Response(JSON.stringify({ 
@@ -73,8 +72,8 @@ export async function GET(request) {
     clearTimeout(timeoutId);
   }
 }
-      headers: { 'Content-Type': 'application/json' }
     });
   }
 }
+
 
